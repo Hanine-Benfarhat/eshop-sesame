@@ -1,0 +1,109 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Products{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h1 class="mb-0">Our Products <small class="text-muted">({{ products|length }})</small></h1>
+        </div>
+        <div class="col-md-4">
+            <form method="GET" class="d-flex">
+                <input 
+                    type="text" 
+                    name="search" 
+                    class="form-control" 
+                    placeholder="Search products..." 
+                    value="{{ app.request.query.get('search') }}"
+                >
+                <button type="submit" class="btn btn-primary ms-2">Search</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sidebar Filters -->
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm p-3">
+                <h5 class="mb-3">Filters</h5>
+                <form method="GET">
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <select class="form-select" name="category">
+                            <option value="" {% if app.request.query.get('category') == '' %}selected{% endif %}>All</option>
+                            <option value="Electronics" {% if app.request.query.get('category') == 'Electronics' %}selected{% endif %}>Electronics</option>
+                            <option value="Furniture" {% if app.request.query.get('category') == 'Furniture' %}selected{% endif %}>Furniture</option>
+                            <option value="Clothing" {% if app.request.query.get('category') == 'Clothing' %}selected{% endif %}>Clothing</option>
+                        </select>
+
+                        <label class="form-label mt-3">Price Range</label>
+                        <select class="form-select" name="price_range">
+                            <option value="" {% if app.request.query.get('price_range') == '' %}selected{% endif %}>All</option>
+                            <option value="0-50" {% if app.request.query.get('price_range') == '0-50' %}selected{% endif %}>0 - 50$</option>
+                            <option value="50-200" {% if app.request.query.get('price_range') == '50-200' %}selected{% endif %}>50 - 200$</option>
+                            <option value="200-500" {% if app.request.query.get('price_range') == '200-500' %}selected{% endif %}>200 - 500$</option>
+                            <option value="500+" {% if app.request.query.get('price_range') == '500+' %}selected{% endif %}>500$+</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-outline-primary w-100">Apply Filters</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="col-md-9">
+            {% if products is empty %}
+                <div class="alert alert-info">No products found.</div>
+            {% else %}
+                <div class="row g-4">
+                    {% for product in products %}
+                        <div class="col-md-4 col-sm-6">
+                            <a href="{{ path('app_product_show', {'id': product.id}) }}" class="text-decoration-none text-dark">
+                                <div class="card h-100 shadow-sm rounded-4 border-0">
+                                    {% if product.image %}
+                                        <img src="{{ asset('uploads/products/' ~ product.image) }}" class="card-img-top rounded-top-4" alt="{{ product.name }}" style="height: 220px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center rounded-top-4" style="height: 220px;">
+                                            <span class="text-muted">No Image</span>
+                                        </div>
+                                    {% endif %}
+                                    <div class="card-body d-flex flex-column">
+                                        <h5 class="card-title">{{ product.name }}</h5>
+                                        <p class="card-text text-muted" style="flex-grow:1;">{{ product.description|length > 80 ? product.description|slice(0,80) ~ '...' : product.description }}</p>
+                                        <p class="card-text fw-bold">${{ product.price|number_format(2, '.', ',') }}</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: none; /* Remove hover animations */
+}
+
+.card-body h5 {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.card-body p {
+    font-size: 0.95rem;
+}
+
+.card-img-top {
+    border-bottom: 1px solid #eee;
+}
+
+.product-card:hover {
+    transform: none; /* No hover effect */
+    box-shadow: none;
+}
+</style>
+{% endblock %}

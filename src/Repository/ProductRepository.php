@@ -1,0 +1,55 @@
+<?php
+
+namespace App\Repository;
+
+use App\Entity\Product;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
+
+/**
+ * @extends ServiceEntityRepository<Product>
+ */
+class ProductRepository extends ServiceEntityRepository
+{
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, Product::class);
+    }
+
+public function findByFilters(?string $search, ?string $category, ?string $priceRange)
+{
+    $qb = $this->createQueryBuilder('p');
+
+    if ($search) {
+        $qb->andWhere('p.name LIKE :search OR p.description LIKE :search')
+           ->setParameter('search', '%'.$search.'%');
+    }
+
+    if ($category) {
+        $qb->andWhere('p.category = :category')
+           ->setParameter('category', $category);
+    }
+
+    if ($priceRange) {
+        switch ($priceRange) {
+            case '0-50':
+                $qb->andWhere('p.price BETWEEN 0 AND 50');
+                break;
+            case '50-200':
+                $qb->andWhere('p.price BETWEEN 50 AND 200');
+                break;
+            case '200-500':
+                $qb->andWhere('p.price BETWEEN 200 AND 500');
+                break;
+            case '500+':
+                $qb->andWhere('p.price >= 500');
+                break;
+        }
+    }
+
+    return $qb->orderBy('p.createdAt', 'DESC')
+              ->getQuery()
+              ->getResult();
+}
+
+}
