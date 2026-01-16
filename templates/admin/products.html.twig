@@ -1,0 +1,377 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Products Management - Admin{% endblock %}
+{% block page_title %}Products Management{% endblock %}
+{% block page_subtitle %}Manage all marketplace products and listings{% endblock %}
+
+{% block body %}
+<!-- Flash Messages -->
+{% for message in app.flashes('success') %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>{{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+{% endfor %}
+
+{% for message in app.flashes('warning') %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>{{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+{% endfor %}
+
+{% for message in app.flashes('danger') %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-x-circle me-2"></i>{{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+{% endfor %}
+
+<!-- Product Statistics -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-card-icon" style="background: #dbeafe;">
+                <i class="bi bi-box-seam" style="color: #3b82f6;"></i>
+            </div>
+            <h2 class="stats-card-value" style="color: #3b82f6;">{{ stats.total }}</h2>
+            <p class="stats-card-label">Total Products</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-card-icon" style="background: #fef3c7;">
+                <i class="bi bi-clock-history" style="color: #f59e0b;"></i>
+            </div>
+            <h2 class="stats-card-value" style="color: #f59e0b;">{{ stats.pending }}</h2>
+            <p class="stats-card-label">Pending Review</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-card-icon" style="background: #d1fae5;">
+                <i class="bi bi-check-circle" style="color: #10b981;"></i>
+            </div>
+            <h2 class="stats-card-value" style="color: #10b981;">{{ stats.approved }}</h2>
+            <p class="stats-card-label">Approved</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-card-icon" style="background: #fee2e2;">
+                <i class="bi bi-x-circle" style="color: #ef4444;"></i>
+            </div>
+            <h2 class="stats-card-value" style="color: #ef4444;">{{ stats.rejected }}</h2>
+            <p class="stats-card-label">Rejected</p>
+        </div>
+    </div>
+</div>
+
+<!-- Products Table -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <h5 class="admin-card-title mb-0">
+                <i class="bi bi-box-seam me-2"></i>
+                Products List
+            </h5>
+            <div class="d-flex gap-2 flex-wrap">
+                <div class="input-group" style="max-width: 300px;">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control" id="productSearch" placeholder="Search products...">
+                </div>
+                <div class="btn-group" role="group">
+                    <a href="{{ path('admin_products', {filter: 'all'}) }}" 
+                       class="btn btn-{{ filter == 'all' ? 'primary' : 'outline-primary' }}">
+                        All ({{ stats.total }})
+                    </a>
+                    <a href="{{ path('admin_products', {filter: 'pending'}) }}" 
+                       class="btn btn-{{ filter == 'pending' ? 'warning' : 'outline-warning' }}">
+                        Pending ({{ stats.pending }})
+                    </a>
+                    <a href="{{ path('admin_products', {filter: 'approved'}) }}" 
+                       class="btn btn-{{ filter == 'approved' ? 'success' : 'outline-success' }}">
+                        Approved ({{ stats.approved }})
+                    </a>
+                    <a href="{{ path('admin_products', {filter: 'rejected'}) }}" 
+                       class="btn btn-{{ filter == 'rejected' ? 'danger' : 'outline-danger' }}">
+                        Rejected ({{ stats.rejected }})
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="admin-card-body p-0">
+        {% if products is empty %}
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <h5>No Products Found</h5>
+                <p class="text-muted mb-0">
+                    {% if filter == 'all' %}
+                        No products in the system yet
+                    {% else %}
+                        No {{ filter }} products at the moment
+                    {% endif %}
+                </p>
+            </div>
+        {% else %}
+            <div class="table-responsive">
+                <table class="table table-modern mb-0" id="productsTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">ID</th>
+                            <th style="width: 250px;">Product</th>
+                            <th>Seller</th>
+                            <th>Price</th>
+                            <th>Category</th>
+                            <th>Condition</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th style="width: 200px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td><span class="badge bg-secondary">#{{ product.id }}</span></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if product.image %}
+                                        {% if product.image starts with 'http' %}
+                                            <img src="{{ product.image }}" 
+                                                 alt="{{ product.name }}" 
+                                                 class="product-thumb me-3"
+                                                 style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+                                        {% else %}
+                                            <img src="{{ asset('uploads/products/' ~ product.image) }}" 
+                                                 alt="{{ product.name }}" 
+                                                 class="product-thumb me-3"
+                                                 style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+                                        {% endif %}
+                                    {% else %}
+                                        <div class="product-thumb me-3 bg-light d-flex align-items-center justify-content-center" 
+                                             style="width: 60px; height: 60px; border-radius: 8px;">
+                                            <i class="bi bi-image text-muted"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <strong class="d-block">{{ product.name }}</strong>
+                                        <small class="text-muted">
+                                            {{ product.description|length > 50 ? product.description|slice(0, 50) ~ '...' : product.description }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if product.seller %}
+                                    <div>
+                                        <strong>{{ product.seller.firstName ?? 'User' }} {{ product.seller.lastName ?? '' }}</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="bi bi-envelope me-1"></i>{{ product.seller.email }}
+                                        </small>
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted">Unknown</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong class="text-primary" style="font-size: 1.1rem;">${{ product.price|number_format(2) }}</strong>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">
+                                    <i class="bi bi-tag me-1"></i>{{ product.category }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if product.condition %}
+                                    <span class="badge bg-secondary">
+                                        {{ product.condition == 'new' ? 'New' : (product.condition == 'like_new' ? 'Like New' : 'Used') }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="status-badge status-{{ product.status }}">
+                                    {{ product.status|upper }}
+                                </span>
+                            </td>
+                            <td>
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar me-1"></i>
+                                    {{ product.createdAt ? product.createdAt|date('M d, Y') : 'N/A' }}
+                                    <br>
+                                    {{ product.createdAt ? product.createdAt|date('H:i') : '' }}
+                                </small>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1 flex-wrap">
+                                    <a href="{{ path('app_product_show', {id: product.id}) }}" 
+                                       class="btn btn-sm btn-info btn-action" 
+                                       target="_blank"
+                                       title="View product">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    
+                                    {% if product.status == 'pending' %}
+                                        <form method="post" action="{{ path('admin_product_approve', {id: product.id}) }}" class="d-inline" data-turbo="false">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('approve' ~ product.id) }}">
+                                            <button type="submit" 
+                                                    class="btn btn-sm btn-success btn-action" 
+                                                    onclick="return confirm('Approve this product?')"
+                                                    title="Approve">
+                                                <i class="bi bi-check-lg"></i>
+                                            </button>
+                                        </form>
+                                        
+                                        <button type="button" 
+                                                class="btn btn-sm btn-danger btn-action" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#rejectModal{{ product.id }}"
+                                                title="Reject">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    {% elseif product.status == 'rejected' and product.rejectionReason %}
+                                        <button type="button" 
+                                                class="btn btn-sm btn-warning btn-action" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#reasonModal{{ product.id }}"
+                                                title="View rejection reason">
+                                            <i class="bi bi-info-circle"></i>
+                                        </button>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Reject Modal -->
+                                <div class="modal fade" id="rejectModal{{ product.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-danger text-white">
+                                                <h5 class="modal-title">
+                                                    <i class="bi bi-x-circle me-2"></i>Reject Product
+                                                </h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form method="post" action="{{ path('admin_product_reject', {id: product.id}) }}" data-turbo="false">
+                                                <div class="modal-body">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('reject' ~ product.id) }}">
+                                                    
+                                                    <div class="alert alert-warning">
+                                                        <i class="bi bi-exclamation-triangle me-2"></i>
+                                                        You are about to reject <strong>{{ product.name }}</strong>
+                                                    </div>
+                                                    
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-bold">Rejection Reason *</label>
+                                                        <textarea name="reason" 
+                                                                  class="form-control" 
+                                                                  rows="4" 
+                                                                  placeholder="Provide a detailed reason for rejection. This will be visible to the seller."
+                                                                  required></textarea>
+                                                        <small class="text-muted">
+                                                            <i class="bi bi-info-circle me-1"></i>
+                                                            Be specific and constructive to help the seller improve
+                                                        </small>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-bold">Common Reasons (Optional)</label>
+                                                        <div class="d-flex flex-wrap gap-2">
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary reason-preset" 
+                                                                    data-reason="Inappropriate or offensive content">
+                                                                Inappropriate content
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary reason-preset" 
+                                                                    data-reason="Poor quality images or description">
+                                                                Poor quality
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary reason-preset" 
+                                                                    data-reason="Prohibited item or category">
+                                                                Prohibited item
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary reason-preset" 
+                                                                    data-reason="Duplicate listing">
+                                                                Duplicate
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary reason-preset" 
+                                                                    data-reason="Missing required information">
+                                                                Missing info
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-danger">
+                                                        <i class="bi bi-x-circle me-1"></i>Reject Product
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Rejection Reason Modal -->
+                                {% if product.status == 'rejected' and product.rejectionReason %}
+                                <div class="modal fade" id="reasonModal{{ product.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-warning">
+                                                <h5 class="modal-title">
+                                                    <i class="bi bi-info-circle me-2"></i>Rejection Reason
+                                                </h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <h6>Product: {{ product.name }}</h6>
+                                                <hr>
+                                                <p class="mb-0">{{ product.rejectionReason }}</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Search functionality
+    const searchInput = document.getElementById('productSearch');
+    const table = document.getElementById('productsTable');
+    
+    if (searchInput && table) {
+        const rows = table.querySelectorAll('tbody tr');
+        
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+    }
+
+    // Preset reason buttons
+    document.querySelectorAll('.reason-preset').forEach(button => {
+        button.addEventListener('click', function() {
+            const modal = this.closest('.modal');
+            const textarea = modal.querySelector('textarea[name="reason"]');
+            textarea.value = this.dataset.reason;
+        });
+    });
+});
+</script>
+{% endblock %}

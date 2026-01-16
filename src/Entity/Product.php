@@ -32,23 +32,28 @@ class Product
     private ?\DateTimeInterface $createdAt = null;
 
     #[ORM\Column(length: 50, nullable: true)]
-private ?string $category = null;
+    private ?string $category = null;
 
-// Getter and Setter
-public function getCategory(): ?string
-{
-    return $this->category;
-}
+    #[ORM\Column(length: 20, options: ["default" => "pending"])]
+    private ?string $status = 'pending'; // pending, approved, rejected
 
-public function setCategory(?string $category): self
-{
-    $this->category = $category;
-    return $this;
-}
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?User $seller = null;
+
+    #[ORM\Column(length: 100, nullable: true)]
+    private ?string $location = null;
+
+    #[ORM\Column(length: 20, nullable: true, name: '`condition`')]
+    private ?string $condition = null; // new, used, like_new
+
+    #[ORM\Column(type: "text", nullable: true)]
+    private ?string $rejectionReason = null;
 
     public function __construct()
     {
         $this->createdAt = new \DateTime();
+        $this->status = 'pending';
     }
 
     public function getId(): ?int
@@ -120,5 +125,86 @@ public function setCategory(?string $category): self
     {
         $this->createdAt = $createdAt;
         return $this;
+    }
+
+    public function getCategory(): ?string
+    {
+        return $this->category;
+    }
+
+    public function setCategory(?string $category): self
+    {
+        $this->category = $category;
+        return $this;
+    }
+
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(string $status): self
+    {
+        $this->status = $status;
+        return $this;
+    }
+
+    public function getSeller(): ?User
+    {
+        return $this->seller;
+    }
+
+    public function setSeller(?User $seller): self
+    {
+        $this->seller = $seller;
+        return $this;
+    }
+
+    public function getLocation(): ?string
+    {
+        return $this->location;
+    }
+
+    public function setLocation(?string $location): self
+    {
+        $this->location = $location;
+        return $this;
+    }
+
+    public function getCondition(): ?string
+    {
+        return $this->condition;
+    }
+
+    public function setCondition(?string $condition): self
+    {
+        $this->condition = $condition;
+        return $this;
+    }
+
+    public function getRejectionReason(): ?string
+    {
+        return $this->rejectionReason;
+    }
+
+    public function setRejectionReason(?string $rejectionReason): self
+    {
+        $this->rejectionReason = $rejectionReason;
+        return $this;
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->status === 'approved';
+    }
+
+    public function isPending(): bool
+    {
+        return $this->status === 'pending';
+    }
+
+    public function isRejected(): bool
+    {
+        return $this->status === 'rejected';
     }
 }

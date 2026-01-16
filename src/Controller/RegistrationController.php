@@ -18,6 +18,11 @@ class RegistrationController extends AbstractController
     #[Route('/register', name: 'app_register')]
     public function register(Request $request, UserPasswordHasherInterface $passwordHasher, EntityManagerInterface $em): Response
     {
+        // Redirect if already logged in
+        if ($this->getUser()) {
+            return $this->redirectToRoute('app_home');
+        }
+
         $user = new User();
 
         $form = $this->createFormBuilder($user)
@@ -32,18 +37,19 @@ class RegistrationController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $plainPassword = $form->get('password')->getData();
             if (!$plainPassword) {
-                $this->addFlash('danger', 'Le mot de passe est requis.');
-            } else {
-                $hashed = $passwordHasher->hashPassword($user, $plainPassword);
-                $user->setPassword($hashed);
-                $user->setIsActive(true);
-
-                $em->persist($user);
-                $em->flush();
-
-                $this->addFlash('success', 'Inscription réussie. Vous pouvez maintenant vous connecter.');
-                return $this->redirectToRoute('app_login');
+                $this->addFlash('danger', 'Password is required.');
+                return $this->redirectToRoute('app_register');
             }
+            
+            $hashed = $passwordHasher->hashPassword($user, $plainPassword);
+            $user->setPassword($hashed);
+            $user->setIsActive(true);
+
+            $em->persist($user);
+            $em->flush();
+
+            $this->addFlash('success', 'Registration successful! You can now login.');
+            return $this->redirectToRoute('app_login');
         }
 
         return $this->render('security/register.html.twig', [

@@ -1,13 +1,242 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Edit Product{% endblock %}
+{% block title %}Edit Product - Sesame Marketplace{% endblock %}
 
 {% block body %}
-    <h1>Edit Product</h1>
+<div class="container-fluid" style="background: white; padding: 2rem 0; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2" style="font-weight: 700; color: #0f172a;">
+                    <i class="bi bi-pencil-square text-warning me-2"></i>Edit Product
+                </h1>
+                <p class="text-muted mb-0">
+                    {% if is_granted('ROLE_ADMIN') %}
+                        Admin Edit Mode - Full control over product listing
+                    {% else %}
+                        Update your product listing
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{{ path('app_product_show', {'id': product.id}) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Product
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 
-    {{ include('product/_form.html.twig', {'button_label': 'Update'}) }}
+<div class="container mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            {% if is_granted('ROLE_ADMIN') %}
+            <div class="alert alert-info border-0 shadow-sm mb-4" style="border-left: 4px solid #3b82f6 !important;">
+                <div class="d-flex align-items-start">
+                    <i class="bi bi-shield-check me-3" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <strong>Admin Mode</strong>
+                        <p class="mb-0 mt-1">You are editing this product as an administrator. Changes will be saved immediately without requiring re-approval.</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
 
-    <a href="{{ path('app_product_index') }}">back to list</a>
+            {% if product.status == 'rejected' and product.rejectionReason %}
+            <div class="alert alert-danger border-0 shadow-sm mb-4" style="border-left: 4px solid #ef4444 !important;">
+                <div class="d-flex align-items-start">
+                    <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <strong>Product Rejected</strong>
+                        <p class="mb-0 mt-1">{{ product.rejectionReason }}</p>
+                    </div>
+                </div>
+            </div>
+            {% elseif product.status == 'pending' %}
+            <div class="alert alert-warning border-0 shadow-sm mb-4" style="border-left: 4px solid #f59e0b !important;">
+                <div class="d-flex align-items-start">
+                    <i class="bi bi-clock-fill me-3" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <strong>Pending Review</strong>
+                        <p class="mb-0 mt-1">Your product is currently under review. Changes will also require re-approval.</p>
+                    </div>
+                </div>
+            </div>
+            {% elseif product.status == 'approved' and not is_granted('ROLE_ADMIN') %}
+            <div class="alert alert-warning border-0 shadow-sm mb-4" style="border-left: 4px solid #f59e0b !important;">
+                <div class="d-flex align-items-start">
+                    <i class="bi bi-info-circle-fill me-3" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <strong>Note</strong>
+                        <p class="mb-0 mt-1">This product is currently approved. Any changes you make will require re-approval before being visible to buyers.</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
 
-    {{ include('product/_delete_form.html.twig') }}
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    {{ form_start(form, {'attr': {'data-turbo': 'false'}}) }}
+                    
+                    <h5 class="fw-bold mb-4" style="color: #0f172a;">Product Information</h5>
+                    
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">
+                                Product Name <span class="text-danger">*</span>
+                            </label>
+                            {{ form_widget(form.name, {'attr': {'class': 'form-control'}}) }}
+                            {{ form_errors(form.name) }}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold">
+                                Description <span class="text-danger">*</span>
+                            </label>
+                            {{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': 4}}) }}
+                            {{ form_errors(form.description) }}
+                            <small class="text-muted">Be specific about condition, features, and any defects</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                Price (TND) <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="bi bi-currency-dollar"></i>
+                                </span>
+                                {{ form_widget(form.price, {'attr': {'class': 'form-control'}}) }}
+                            </div>
+                            {{ form_errors(form.price) }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                Quantity <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="bi bi-box-seam"></i>
+                                </span>
+                                {{ form_widget(form.quantity, {'attr': {'class': 'form-control'}}) }}
+                            </div>
+                            {{ form_errors(form.quantity) }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                Category <span class="text-danger">*</span>
+                            </label>
+                            {{ form_widget(form.category, {'attr': {'class': 'form-select'}}) }}
+                            {{ form_errors(form.category) }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                Condition <span class="text-danger">*</span>
+                            </label>
+                            {{ form_widget(form.condition, {'attr': {'class': 'form-select'}}) }}
+                            {{ form_errors(form.condition) }}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Location</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="bi bi-geo-alt"></i>
+                                </span>
+                                {{ form_widget(form.location, {'attr': {'class': 'form-control'}}) }}
+                            </div>
+                            {{ form_errors(form.location) }}
+                            <small class="text-muted">City or region where the product is located</small>
+                        </div>
+
+                        <div class="col-12">
+                            <hr class="my-2">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-image me-2"></i>Product Image
+                            </label>
+                            
+                            {% if product.image %}
+                            <div class="mb-3">
+                                <p class="text-muted small mb-2">Current image:</p>
+                                <div class="position-relative d-inline-block">
+                                    {% if product.image starts with 'http' %}
+                                        <img src="{{ product.image }}" alt="{{ product.name }}" class="rounded border" style="max-width: 200px; max-height: 200px; object-fit: cover;">
+                                    {% else %}
+                                        <img src="{{ asset('uploads/products/' ~ product.image) }}" alt="{{ product.name }}" class="rounded border" style="max-width: 200px; max-height: 200px; object-fit: cover;">
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="border rounded p-4 bg-light">
+                                {{ form_widget(form.imageFile, {'attr': {'class': 'form-control'}}) }}
+                                {{ form_errors(form.imageFile) }}
+                                <small class="text-muted d-block mt-2">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Upload a new image to replace the current one. Supported formats: JPG, PNG (Max: 5MB)
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-between mt-4 pt-4 border-top">
+                        <a href="{{ path('app_product_show', {'id': product.id}) }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-warning btn-lg px-5">
+                            <i class="bi bi-check-circle me-2"></i>
+                            {% if is_granted('ROLE_ADMIN') %}
+                                Update Product (Admin)
+                            {% else %}
+                                Update Product
+                            {% endif %}
+                        </button>
+                    </div>
+
+                    {{ form_end(form) }}
+                </div>
+            </div>
+
+            {% if product.seller and is_granted('ROLE_ADMIN') %}
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3" style="color: #0f172a;">
+                        <i class="bi bi-info-circle text-primary me-2"></i>Product Owner Information
+                    </h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <small class="text-muted d-block">Seller Name</small>
+                            <strong>{{ product.seller.firstName ~ ' ' ~ product.seller.lastName }}</strong>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted d-block">Email</small>
+                            <strong>{{ product.seller.email }}</strong>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted d-block">Product Status</small>
+                            {% if product.status == 'pending' %}
+                                <span class="badge" style="background: #fef3c7; color: #92400e;">Pending</span>
+                            {% elseif product.status == 'approved' %}
+                                <span class="badge" style="background: #d1fae5; color: #065f46;">Approved</span>
+                            {% elseif product.status == 'rejected' %}
+                                <span class="badge" style="background: #fee2e2; color: #991b1b;">Rejected</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted d-block">Created At</small>
+                            <strong>{{ product.createdAt|date('Y-m-d H:i:s') }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
 {% endblock %}

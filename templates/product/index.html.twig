@@ -1,109 +1,142 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Products{% endblock %}
+{% block title %}Browse Products - Sesame Marketplace{% endblock %}
 
 {% block body %}
-<div class="container mt-5">
-    <div class="row mb-4 align-items-center">
-        <div class="col-md-8">
-            <h1 class="mb-0">Our Products <small class="text-muted">({{ products|length }})</small></h1>
-        </div>
-        <div class="col-md-4">
-            <form method="GET" class="d-flex">
-                <input 
-                    type="text" 
-                    name="search" 
-                    class="form-control" 
-                    placeholder="Search products..." 
-                    value="{{ app.request.query.get('search') }}"
-                >
-                <button type="submit" class="btn btn-primary ms-2">Search</button>
-            </form>
-        </div>
-    </div>
-
-    <div class="row">
-        <!-- Sidebar Filters -->
-        <div class="col-md-3 mb-4">
-            <div class="card shadow-sm p-3">
-                <h5 class="mb-3">Filters</h5>
-                <form method="GET">
-                    <div class="mb-3">
-                        <label class="form-label">Category</label>
-                        <select class="form-select" name="category">
-                            <option value="" {% if app.request.query.get('category') == '' %}selected{% endif %}>All</option>
-                            <option value="Electronics" {% if app.request.query.get('category') == 'Electronics' %}selected{% endif %}>Electronics</option>
-                            <option value="Furniture" {% if app.request.query.get('category') == 'Furniture' %}selected{% endif %}>Furniture</option>
-                            <option value="Clothing" {% if app.request.query.get('category') == 'Clothing' %}selected{% endif %}>Clothing</option>
-                        </select>
-
-                        <label class="form-label mt-3">Price Range</label>
-                        <select class="form-select" name="price_range">
-                            <option value="" {% if app.request.query.get('price_range') == '' %}selected{% endif %}>All</option>
-                            <option value="0-50" {% if app.request.query.get('price_range') == '0-50' %}selected{% endif %}>0 - 50$</option>
-                            <option value="50-200" {% if app.request.query.get('price_range') == '50-200' %}selected{% endif %}>50 - 200$</option>
-                            <option value="200-500" {% if app.request.query.get('price_range') == '200-500' %}selected{% endif %}>200 - 500$</option>
-                            <option value="500+" {% if app.request.query.get('price_range') == '500+' %}selected{% endif %}>500$+</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-outline-primary w-100">Apply Filters</button>
-                </form>
+<div class="container-fluid" style="background: white; padding: 2rem 0; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2" style="font-weight: 700; color: #0f172a;">Browse Products</h1>
+                <p class="text-muted mb-0">Discover quality products from trusted sellers</p>
             </div>
-        </div>
-
-        <!-- Products Grid -->
-        <div class="col-md-9">
-            {% if products is empty %}
-                <div class="alert alert-info">No products found.</div>
-            {% else %}
-                <div class="row g-4">
-                    {% for product in products %}
-                        <div class="col-md-4 col-sm-6">
-                            <a href="{{ path('app_product_show', {'id': product.id}) }}" class="text-decoration-none text-dark">
-                                <div class="card h-100 shadow-sm rounded-4 border-0">
-                                    {% if product.image %}
-                                        <img src="{{ asset('uploads/products/' ~ product.image) }}" class="card-img-top rounded-top-4" alt="{{ product.name }}" style="height: 220px; object-fit: cover;">
-                                    {% else %}
-                                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center rounded-top-4" style="height: 220px;">
-                                            <span class="text-muted">No Image</span>
-                                        </div>
-                                    {% endif %}
-                                    <div class="card-body d-flex flex-column">
-                                        <h5 class="card-title">{{ product.name }}</h5>
-                                        <p class="card-text text-muted" style="flex-grow:1;">{{ product.description|length > 80 ? product.description|slice(0,80) ~ '...' : product.description }}</p>
-                                        <p class="card-text fw-bold">${{ product.price|number_format(2, '.', ',') }}</p>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
+            <div class="col-md-4 text-end">
+                {% if is_granted('ROLE_USER') %}
+                    <a href="{{ path('app_product_new') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Sell Product
+                    </a>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
 
+<div class="container">
+    <!-- Search and Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <form method="get" action="{{ path('app_product_index') }}" data-turbo="false">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Search Products</label>
+                        <input type="text" name="search" class="form-control" placeholder="Search by name or description..." value="{{ app.request.query.get('search') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Category</label>
+                        <select name="category" class="form-select">
+                            <option value="">All Categories</option>
+                            <option value="Electronics" {{ app.request.query.get('category') == 'Electronics' ? 'selected' : '' }}>Electronics</option>
+                            <option value="Fashion" {{ app.request.query.get('category') == 'Fashion' ? 'selected' : '' }}>Fashion & Clothing</option>
+                            <option value="Furniture" {{ app.request.query.get('category') == 'Furniture' ? 'selected' : '' }}>Home & Furniture</option>
+                            <option value="Sports" {{ app.request.query.get('category') == 'Sports' ? 'selected' : '' }}>Sports & Outdoors</option>
+                            <option value="Books" {{ app.request.query.get('category') == 'Books' ? 'selected' : '' }}>Books & Media</option>
+                            <option value="Automotive" {{ app.request.query.get('category') == 'Automotive' ? 'selected' : '' }}>Automotive</option>
+                            <option value="Beauty" {{ app.request.query.get('category') == 'Beauty' ? 'selected' : '' }}>Beauty & Health</option>
+                            <option value="Toys" {{ app.request.query.get('category') == 'Toys' ? 'selected' : '' }}>Toys & Games</option>
+                            <option value="Other" {{ app.request.query.get('category') == 'Other' ? 'selected' : '' }}>Other</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Price Range</label>
+                        <select name="price_range" class="form-select">
+                            <option value="">All Prices</option>
+                            <option value="0-50" {{ app.request.query.get('price_range') == '0-50' ? 'selected' : '' }}>$0 - $50</option>
+                            <option value="50-200" {{ app.request.query.get('price_range') == '50-200' ? 'selected' : '' }}>$50 - $200</option>
+                            <option value="200-500" {{ app.request.query.get('price_range') == '200-500' ? 'selected' : '' }}>$200 - $500</option>
+                            <option value="500+" {{ app.request.query.get('price_range') == '500+' ? 'selected' : '' }}>$500+</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label d-block">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search me-2"></i>Filter
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    {% if products is empty %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-inbox" style="font-size: 4rem; color: #cbd5e1;"></i>
+                <h4 class="mt-3 mb-2">No Products Found</h4>
+                <p class="text-muted">Try adjusting your filters or check back later</p>
+                <a href="{{ path('app_product_index') }}" class="btn btn-outline-primary mt-3">Clear Filters</a>
+            </div>
+        </div>
+    {% else %}
+        <div class="row g-4 mb-4">
+            {% for product in products %}
+                <div class="col-lg-3 col-md-4 col-sm-6">
+                    <div class="card h-100 border-0 shadow-sm" style="transition: all 0.2s;">
+                        <a href="{{ path('app_product_show', {'id': product.id}) }}" class="text-decoration-none">
+                            {% if product.image %}
+                                {% if product.image starts with 'http' %}
+                                    <img src="{{ product.image }}" class="card-img-top" alt="{{ product.name }}" style="height: 220px; object-fit: cover;">
+                                {% else %}
+                                    <img src="{{ asset('uploads/products/' ~ product.image) }}" class="card-img-top" alt="{{ product.name }}" style="height: 220px; object-fit: cover;">
+                                {% endif %}
+                            {% else %}
+                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 220px;">
+                                    <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="card-title mb-0 text-dark fw-bold" style="font-size: 0.95rem;">{{ product.name }}</h6>
+                                    {% if product.condition %}
+                                        <span class="badge bg-secondary ms-1" style="font-size: 0.65rem;">
+                                            {{ product.condition == 'new' ? 'New' : (product.condition == 'like_new' ? 'Like New' : 'Used') }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                
+                                <p class="card-text text-muted small mb-3" style="font-size: 0.85rem; line-height: 1.4;">
+                                    {{ product.description|length > 60 ? product.description|slice(0, 60) ~ '...' : product.description }}
+                                </p>
+                                
+                                <div class="d-flex justify-content-between align-items-end">
+                                    <div>
+                                        <h5 class="text-primary mb-0 fw-bold">${{ product.price|number_format(2, '.', ',') }}</h5>
+                                        {% if product.location %}
+                                            <small class="text-muted" style="font-size: 0.75rem;">
+                                                <i class="bi bi-geo-alt"></i> {{ product.location }}
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                    {% if product.category %}
+                                        <span class="badge bg-light text-dark border" style="font-size: 0.7rem;">
+                                            {{ product.category }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
 <style>
-.card {
-    transition: none; /* Remove hover animations */
-}
-
-.card-body h5 {
-    font-weight: 600;
-    font-size: 1.1rem;
-}
-
-.card-body p {
-    font-size: 0.95rem;
-}
-
-.card-img-top {
-    border-bottom: 1px solid #eee;
-}
-
-.product-card:hover {
-    transform: none; /* No hover effect */
-    box-shadow: none;
-}
+    .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.12) !important;
+    }
 </style>
 {% endblock %}

@@ -1,0 +1,346 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}User Management - Admin{% endblock %}
+{% block page_title %}User Management{% endblock %}
+{% block page_subtitle %}Manage users, roles, and permissions{% endblock %}
+
+{% block body %}
+<!-- Flash Messages -->
+{% for message in app.flashes('success') %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>{{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+{% endfor %}
+
+{% for message in app.flashes('danger') %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>{{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+{% endfor %}
+
+<!-- User Statistics -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-card-icon" style="background: #dbeafe;">
+                <i class="bi bi-people" style="color: #3b82f6;"></i>
+            </div>
+            <h2 class="stats-card-value" style="color: #3b82f6;">{{ users|length }}</h2>
+            <p class="stats-card-label">Total Users</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-card-icon" style="background: #fef3c7;">
+                <i class="bi bi-shield-check" style="color: #f59e0b;"></i>
+            </div>
+            <h2 class="stats-card-value" style="color: #f59e0b;">
+                {{ users|filter(u => 'ROLE_ADMIN' in u.roles)|length }}
+            </h2>
+            <p class="stats-card-label">Administrators</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-card-icon" style="background: #d1fae5;">
+                <i class="bi bi-person-check" style="color: #10b981;"></i>
+            </div>
+            <h2 class="stats-card-value" style="color: #10b981;">
+                {{ users|filter(u => 'ROLE_ADMIN' not in u.roles)|length }}
+            </h2>
+            <p class="stats-card-label">Regular Users</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-card-icon" style="background: #e0e7ff;">
+                <i class="bi bi-clock-history" style="color: #6366f1;"></i>
+            </div>
+            <h2 class="stats-card-value" style="color: #6366f1;">
+                {{ users|filter(u => u.createdAt and u.createdAt|date('Y-m-d') == 'now'|date('Y-m-d'))|length }}
+            </h2>
+            <p class="stats-card-label">New Today</p>
+        </div>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <h5 class="admin-card-title mb-0">
+                <i class="bi bi-people me-2"></i>
+                All Users
+            </h5>
+            <div class="d-flex gap-2">
+                <div class="input-group" style="max-width: 300px;">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control" id="userSearch" placeholder="Search users...">
+                </div>
+                <select class="form-select" id="roleFilter" style="max-width: 200px;">
+                    <option value="all">All Roles</option>
+                    <option value="admin">Administrators</option>
+                    <option value="user">Regular Users</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="admin-card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-modern mb-0" id="usersTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Name</th>
+                        <th>Roles</th>
+                        <th>Registered</th>
+                        <th>Products</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr data-user-role="{{ 'ROLE_ADMIN' in user.roles ? 'admin' : 'user' }}">
+                        <td><span class="badge bg-secondary">#{{ user.id }}</span></td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="user-avatar me-3">
+                                    {{ user.email|slice(0, 2)|upper }}
+                                </div>
+                                <div>
+                                    <strong>{{ user.firstName ?? 'N/A' }} {{ user.lastName ?? '' }}</strong>
+                                    {% if user.id == app.user.id %}
+                                        <span class="badge bg-primary ms-1">You</span>
+                                    {% endif %}
+                                    {% if 'ROLE_ADMIN' in user.roles %}
+                                        <span class="badge bg-danger ms-1">Admin</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <i class="bi bi-envelope me-1 text-muted"></i>{{ user.email }}
+                        </td>
+                        <td>
+                            {% if user.firstName %}
+                                {{ user.firstName }} {{ user.lastName }}
+                            {% else %}
+                                <span class="text-muted">Not set</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% for role in user.roles %}
+                                <span class="badge bg-{{ role == 'ROLE_ADMIN' ? 'danger' : 'primary' }} me-1">
+                                    {{ role|replace({'ROLE_': ''}) }}
+                                </span>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                <i class="bi bi-calendar me-1"></i>
+                                {{ user.createdAt ? user.createdAt|date('M d, Y') : 'Unknown' }}
+                            </small>
+                            <br>
+                            <small class="text-muted">
+                                {{ user.createdAt ? user.createdAt|date('H:i') : '' }}
+                            </small>
+                        </td>
+                        <td>
+                            {% set productCount = user.products|length %}
+                            <span class="badge bg-{{ productCount > 0 ? 'success' : 'secondary' }}">
+                                {{ productCount }} {{ productCount == 1 ? 'product' : 'products' }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                {% if user.id != app.user.id %}
+                                    <form method="post" action="{{ path('admin_user_toggle_admin', {'id': user.id}) }}" class="d-inline" data-turbo="false">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('toggle-admin' ~ user.id) }}">
+                                        <button type="submit" 
+                                                class="btn btn-sm btn-{{ 'ROLE_ADMIN' in user.roles ? 'warning' : 'success' }} btn-action"
+                                                onclick="return confirm('{{ 'ROLE_ADMIN' in user.roles ? 'Remove admin privileges from' : 'Grant admin privileges to' }} {{ user.email }}?')">
+                                            <i class="bi bi-{{ 'ROLE_ADMIN' in user.roles ? 'shield-slash' : 'shield-check' }}"></i>
+                                            {% if 'ROLE_ADMIN' in user.roles %}
+                                                Remove Admin
+                                            {% else %}
+                                                Make Admin
+                                            {% endif %}
+                                        </button>
+                                    </form>
+                                    <button type="button" class="btn btn-sm btn-info btn-action ms-1" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#userModal{{ user.id }}">
+                                        <i class="bi bi-eye"></i> View Details
+                                    </button>
+                                {% else %}
+                                    <button class="btn btn-sm btn-secondary" disabled>
+                                        <i class="bi bi-person-circle"></i> Current User
+                                    </button>
+                                {% endif %}
+                            </div>
+
+                            <!-- User Details Modal -->
+                            <div class="modal fade" id="userModal{{ user.id }}" tabindex="-1">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">User Details - {{ user.email }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <h6 class="text-muted mb-3">Personal Information</h6>
+                                                    <table class="table table-sm">
+                                                        <tr>
+                                                            <th>User ID:</th>
+                                                            <td>#{{ user.id }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <th>Email:</th>
+                                                            <td>{{ user.email }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <th>First Name:</th>
+                                                            <td>{{ user.firstName ?? 'Not set' }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <th>Last Name:</th>
+                                                            <td>{{ user.lastName ?? 'Not set' }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <th>Registered:</th>
+                                                            <td>{{ user.createdAt ? user.createdAt|date('F d, Y H:i') : 'Unknown' }}</td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <h6 class="text-muted mb-3">Account Status</h6>
+                                                    <table class="table table-sm">
+                                                        <tr>
+                                                            <th>Roles:</th>
+                                                            <td>
+                                                                {% for role in user.roles %}
+                                                                    <span class="badge bg-{{ role == 'ROLE_ADMIN' ? 'danger' : 'primary' }}">{{ role }}</span>
+                                                                {% endfor %}
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <th>Total Products:</th>
+                                                            <td>{{ user.products|length }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <th>Active Products:</th>
+                                                            <td>{{ user.products|filter(p => p.status == 'approved')|length }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <th>Pending Products:</th>
+                                                            <td>{{ user.products|filter(p => p.status == 'pending')|length }}</td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            
+                                            {% if user.products|length > 0 %}
+                                                <hr>
+                                                <h6 class="text-muted mb-3">Recent Products</h6>
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Product</th>
+                                                                <th>Price</th>
+                                                                <th>Status</th>
+                                                                <th>Created</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for product in user.products|slice(0, 5) %}
+                                                                <tr>
+                                                                    <td>{{ product.name }}</td>
+                                                                    <td>${{ product.price }}</td>
+                                                                    <td>
+                                                                        <span class="badge bg-{{ product.status == 'approved' ? 'success' : (product.status == 'rejected' ? 'danger' : 'warning') }}">
+                                                                            {{ product.status }}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td>{{ product.createdAt|date('M d, Y') }}</td>
+                                                                </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="bi bi-people"></i>
+                                <h5>No Users Found</h5>
+                                <p class="text-muted mb-0">There are no users in the system</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Search functionality
+    const searchInput = document.getElementById('userSearch');
+    const roleFilter = document.getElementById('roleFilter');
+    const table = document.getElementById('usersTable');
+    const rows = table.querySelectorAll('tbody tr');
+
+    function filterTable() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedRole = roleFilter.value;
+
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const userRole = row.dataset.userRole;
+            
+            const matchesSearch = text.includes(searchTerm);
+            const matchesRole = selectedRole === 'all' || userRole === selectedRole;
+            
+            row.style.display = matchesSearch && matchesRole ? '' : 'none';
+        });
+    }
+
+    searchInput.addEventListener('input', filterTable);
+    roleFilter.addEventListener('change', filterTable);
+});
+</script>
+{% endblock %}

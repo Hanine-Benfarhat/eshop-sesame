@@ -1,0 +1,175 @@
+﻿{% extends 'base.html.twig' %}
+
+{% block title %}Sesame Marketplace - Buy & Sell Quality Products{% endblock %}
+
+{% block body %}
+<!-- Hero Section -->
+<div class="container-fluid" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); padding: 4rem 0; margin-bottom: 3rem;">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 text-white">
+                <h1 class="display-3 fw-bold mb-3">Buy & Sell with Confidence</h1>
+                <p class="lead mb-4" style="opacity: 0.9;">Join thousands of users trading quality products in Tunisia's trusted marketplace</p>
+                <div class="d-flex gap-3">
+                    <a href="{{ path('app_product_index') }}" class="btn btn-light btn-lg px-4">
+                        <i class="bi bi-search me-2"></i>Browse Products
+                    </a>
+                    {% if not app.user %}
+                        <a href="{{ path('app_register') }}" class="btn btn-outline-light btn-lg px-4">
+                            <i class="bi bi-person-plus me-2"></i>Start Selling
+                        </a>
+                    {% else %}
+                        <a href="{{ path('app_product_new') }}" class="btn btn-outline-light btn-lg px-4">
+                            <i class="bi bi-plus-circle me-2"></i>Sell Now
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6 text-center d-none d-lg-block">
+                <i class="bi bi-cart3" style="font-size: 250px; color: white; opacity: 0.15;"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="container mb-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold mb-2" style="color: #0f172a;">Why Choose Sesame?</h2>
+        <p class="text-muted">Everything you need for a great marketplace experience</p>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="bi bi-shield-check text-primary" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">Secure Transactions</h5>
+                    <p class="text-muted small mb-0">All products are verified by our admin team before going live to ensure quality and authenticity</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="bi bi-people text-success" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">Trusted Community</h5>
+                    <p class="text-muted small mb-0">Connect with verified buyers and sellers across Tunisia in a safe marketplace environment</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="bi bi-lightning text-warning" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">Quick & Easy</h5>
+                    <p class="text-muted small mb-0">List your products in minutes with our simple form and start selling to buyers today</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Latest Products Section -->
+<div class="container mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #0f172a;">Latest Products</h2>
+            <p class="text-muted small mb-0">Recently listed items from our sellers</p>
+        </div>
+        <a href="{{ path('app_product_index') }}" class="btn btn-outline-primary">
+            View All <i class="bi bi-arrow-right ms-2"></i>
+        </a>
+    </div>
+
+    {% if products is empty %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-inbox" style="font-size: 5rem; color: #cbd5e1;"></i>
+                <h4 class="mt-4 mb-2" style="color: #0f172a;">No Products Available Yet</h4>
+                <p class="text-muted mb-4">Be the first to list a product on our marketplace!</p>
+                {% if is_granted('ROLE_USER') %}
+                    <a href="{{ path('app_product_new') }}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-plus-circle me-2"></i>Add Product
+                    </a>
+                {% else %}
+                    <a href="{{ path('app_register') }}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-person-plus me-2"></i>Register to Sell
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="row g-4">
+            {% for product in products %}
+                <div class="col-lg-3 col-md-4 col-sm-6">
+                    <div class="card h-100 border-0 shadow-sm" style="transition: all 0.2s;">
+                        <a href="{{ path('app_product_show', {'id': product.id}) }}" class="text-decoration-none">
+                            {% if product.image %}
+                                {% if product.image starts with 'http' %}
+                                    <img src="{{ product.image }}" class="card-img-top" alt="{{ product.name }}" style="height: 250px; object-fit: cover;">
+                                {% else %}
+                                    <img src="{{ asset('uploads/products/' ~ product.image) }}" class="card-img-top" alt="{{ product.name }}" style="height: 250px; object-fit: cover;">
+                                {% endif %}
+                            {% else %}
+                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 250px;">
+                                    <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                                </div>
+                            {% endif %}
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="card-title mb-0 text-dark fw-bold">{{ product.name }}</h6>
+                                    {% if product.condition %}
+                                        <span class="badge bg-secondary ms-2" style="font-size: 0.7rem;">
+                                            {{ product.condition == 'new' ? 'New' : (product.condition == 'like_new' ? 'Like New' : 'Used') }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <p class="card-text text-muted small" style="font-size: 0.85rem;">
+                                    {{ product.description|length > 80 ? product.description|slice(0, 80) ~ '...' : product.description }}
+                                </p>
+                                <div class="d-flex justify-content-between align-items-end mt-3">
+                                    <div>
+                                        <h5 class="text-primary mb-0 fw-bold">${{ product.price|number_format(2, '.', ',') }}</h5>
+                                        {% if product.location %}
+                                            <small class="text-muted" style="font-size: 0.75rem;">
+                                                <i class="bi bi-geo-alt"></i> {{ product.location }}
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+<!-- Call to Action -->
+{% if not app.user %}
+<div class="container-fluid" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); padding: 4rem 0; margin-top: 4rem;">
+    <div class="container text-center text-white">
+        <h2 class="fw-bold mb-3">Ready to Start Selling?</h2>
+        <p class="lead mb-4" style="opacity: 0.9;">Join our marketplace and reach thousands of potential buyers across Tunisia</p>
+        <a href="{{ path('app_register') }}" class="btn btn-light btn-lg px-5">
+            <i class="bi bi-person-plus me-2"></i>Create Free Account
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<style>
+    .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.12) !important;
+    }
+</style>
+{% endblock %}

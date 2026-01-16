@@ -6,10 +6,87 @@
         <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
         {% block stylesheets %}
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
             <style>
-                /* Small, global tweaks for product pages */
-                body { padding-top: 1.5rem; padding-bottom: 1.5rem; }
-                .product-img { max-width: 100px; max-height: 100px; object-fit: cover; border-radius: .25rem; }
+                :root {
+                    --primary-color: #059669;
+                    --secondary-color: #64748b;
+                    --success-color: #10b981;
+                    --danger-color: #ef4444;
+                    --warning-color: #f59e0b;
+                    --dark-color: #1e293b;
+                    --light-bg: #f8fafc;
+                }
+                
+                body { 
+                    padding-top: 70px;
+                    background-color: var(--light-bg);
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                }
+                
+                .navbar {
+                    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                }
+                
+                .navbar-brand {
+                    font-weight: 700;
+                    font-size: 1.5rem;
+                    letter-spacing: -0.5px;
+                }
+                
+                .nav-link {
+                    font-weight: 500;
+                    transition: opacity 0.2s;
+                }
+                
+                .nav-link:hover {
+                    opacity: 0.8;
+                }
+                
+                .btn-primary {
+                    background-color: var(--primary-color);
+                    border-color: var(--primary-color);
+                }
+                
+                .btn-primary:hover {
+                    background-color: #047857;
+                    border-color: #047857;
+                }
+                
+                .card {
+                    border: none;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                    transition: transform 0.2s, box-shadow 0.2s;
+                }
+                
+                .card:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                }
+                
+                .product-img { 
+                    max-width: 100px; 
+                    max-height: 100px; 
+                    object-fit: cover; 
+                    border-radius: .375rem;
+                }
+                
+                .badge {
+                    font-weight: 500;
+                    padding: 0.35em 0.65em;
+                }
+                
+                footer {
+                    background-color: var(--dark-color);
+                    color: #94a3b8;
+                    margin-top: 4rem;
+                }
+                
+                .alert {
+                    border: none;
+                    border-radius: 0.5rem;
+                }
             </style>
         {% endblock %}
 
@@ -19,6 +96,132 @@
         {% endblock %}
     </head>
     <body>
+        <!-- Navigation Bar -->
+        <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+            <div class="container">
+                <a class="navbar-brand" href="{{ path('app_home') }}">
+                    <i class="bi bi-shop"></i> Sesame Marketplace
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ path('app_home') }}">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ path('app_product_index') }}">Browse Products</a>
+                        </li>
+                        {% if is_granted('ROLE_USER') %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ path('app_product_new') }}">
+                                    <i class="bi bi-plus-circle"></i> Sell Product
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% if is_granted('ROLE_ADMIN') %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ path('admin_dashboard') }}">
+                                    <i class="bi bi-speedometer2"></i> Admin Dashboard
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                    <ul class="navbar-nav">
+                        {% if app.user %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-person-circle"></i> {{ app.user.firstName ?? app.user.email }}
+                                    {% if is_granted('ROLE_ADMIN') %}
+                                        <span class="badge bg-warning text-dark ms-1">Admin</span>
+                                    {% endif %}
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><span class="dropdown-item-text text-muted small">{{ app.user.email }}</span></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ path('app_product_new') }}"><i class="bi bi-plus-circle"></i> Sell Product</a></li>
+                                    {% if is_granted('ROLE_ADMIN') %}
+                                        <li><a class="dropdown-item" href="{{ path('admin_dashboard') }}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                    {% endif %}
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="{{ path('app_logout') }}">
+                                            <i class="bi bi-box-arrow-right"></i> Logout
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ path('app_register') }}">
+                                    <i class="bi bi-person-plus"></i> Register
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link btn btn-outline-light btn-sm ms-2 px-3" href="{{ path('app_login') }}">
+                                    Login
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Flash Messages -->
+        <div class="container mt-3">
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ label }} alert-dismissible fade show" role="alert">
+                        {% if label == 'success' %}
+                            <i class="bi bi-check-circle-fill"></i>
+                        {% elseif label == 'danger' %}
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                        {% elseif label == 'warning' %}
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                        {% endif %}
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+
+        <!-- Main Content -->
         {% block body %}{% endblock %}
+
+        <!-- Footer -->
+        <footer class="py-4 mt-5">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h5 class="text-white">Sesame Marketplace</h5>
+                        <p class="small">Your trusted platform for buying and selling quality products.</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-white">Quick Links</h6>
+                        <ul class="list-unstyled small">
+                            <li><a href="{{ path('app_home') }}" class="text-decoration-none text-muted">Home</a></li>
+                            <li><a href="{{ path('app_product_index') }}" class="text-decoration-none text-muted">Browse Products</a></li>
+                            {% if is_granted('ROLE_USER') %}
+                                <li><a href="{{ path('app_product_new') }}" class="text-decoration-none text-muted">Sell Product</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-white">Contact</h6>
+                        <p class="small">
+                            Email: contact@sesame-marketplace.com<br>
+                            Phone: +216 XX XXX XXX
+                        </p>
+                    </div>
+                </div>
+                <hr class="my-3" style="border-color: #475569;">
+                <div class="text-center small">
+                    <p class="mb-0">&copy; {{ 'now'|date('Y') }} Sesame Marketplace. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
     </body>
 </html>

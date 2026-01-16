@@ -1,0 +1,264 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Manage and monitor your marketplace{% endblock %}
+
+{% block body %}
+<!-- Stats Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-card-icon" style="background: #fef3c7;">
+                <i class="bi bi-clock-history" style="color: #f59e0b;"></i>
+            </div>
+            <h2 class="stats-card-value" style="color: #f59e0b;">{{ pendingProducts|length }}</h2>
+            <p class="stats-card-label">Pending Approval</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-card-icon" style="background: #d1fae5;">
+                <i class="bi bi-check-circle" style="color: #10b981;"></i>
+            </div>
+            <h2 class="stats-card-value" style="color: #10b981;">{{ approvedProducts|length }}</h2>
+            <p class="stats-card-label">Approved Products</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-card-icon" style="background: #fee2e2;">
+                <i class="bi bi-x-circle" style="color: #ef4444;"></i>
+            </div>
+            <h2 class="stats-card-value" style="color: #ef4444;">{{ rejectedProducts|length }}</h2>
+            <p class="stats-card-label">Rejected Products</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-card-icon" style="background: #d1fae5;">
+                <i class="bi bi-box-seam" style="color: #059669;"></i>
+            </div>
+            <h2 class="stats-card-value" style="color: #059669;">{{ pendingProducts|length + approvedProducts|length + rejectedProducts|length }}</h2>
+            <p class="stats-card-label">Total Products</p>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Products -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="admin-card-title mb-0">
+                <i class="bi bi-clock-history text-warning me-2"></i>
+                Pending Approval
+            </h5>
+            {% if pendingProducts|length > 0 %}
+                <span class="status-badge status-pending">{{ pendingProducts|length }} Items</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="admin-card-body p-0">
+        {% if pendingProducts is empty %}
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <h5>No Pending Products</h5>
+                <p class="text-muted mb-0">All products have been reviewed</p>
+            </div>
+        {% else %}
+            <div class="table-responsive">
+                <table class="table table-modern mb-0">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Seller</th>
+                            <th>Price</th>
+                            <th>Category</th>
+                            <th>Location</th>
+                            <th>Condition</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in pendingProducts %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if product.image %}
+                                            {% if product.image starts with 'http' %}
+                                                <img src="{{ product.image }}" alt="{{ product.name }}" class="product-thumb me-3">
+                                            {% else %}
+                                                <img src="{{ asset('uploads/products/' ~ product.image) }}" alt="{{ product.name }}" class="product-thumb me-3">
+                                            {% endif %}
+                                        {% else %}
+                                            <div class="product-thumb me-3 bg-light d-flex align-items-center justify-content-center">
+                                                <i class="bi bi-image text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <strong>{{ product.name }}</strong><br>
+                                            <small class="text-muted">{{ product.description|length > 40 ? product.description|slice(0, 40) ~ '...' : product.description }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong>{{ product.seller ? product.seller.firstName ~ ' ' ~ product.seller.lastName : 'Unknown' }}</strong><br>
+                                        <small class="text-muted">{{ product.seller ? product.seller.email : '' }}</small>
+                                    </div>
+                                </td>
+                                <td><strong class="text-primary">${{ product.price }}</strong></td>
+                                <td><span class="badge bg-secondary">{{ product.category }}</span></td>
+                                <td>{{ product.location ?? 'N/A' }}</td>
+                                <td>
+                                    {% if product.condition %}
+                                        <span class="badge bg-info">
+                                            {{ product.condition == 'new' ? 'New' : (product.condition == 'like_new' ? 'Like New' : 'Used') }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td><small class="text-muted">{{ product.createdAt|date('M d, Y') }}</small></td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <form method="post" action="{{ path('admin_product_approve', {'id': product.id}) }}" class="d-inline" data-turbo="false">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('approve' ~ product.id) }}">
+                                            <button type="submit" class="btn btn-success btn-action btn-sm" onclick="return confirm('Approve this product?')">
+                                                <i class="bi bi-check-lg"></i> Approve
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn btn-danger btn-action btn-sm ms-1" data-bs-toggle="modal" data-bs-target="#rejectModal{{ product.id }}">
+                                            <i class="bi bi-x-lg"></i> Reject
+                                        </button>
+                                    </div>
+
+                                    <!-- Reject Modal -->
+                                    <div class="modal fade" id="rejectModal{{ product.id }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Reject Product</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <form method="post" action="{{ path('admin_product_reject', {'id': product.id}) }}" data-turbo="false">
+                                                    <div class="modal-body">
+                                                        <input type="hidden" name="_token" value="{{ csrf_token('reject' ~ product.id) }}">
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-bold">Rejection Reason</label>
+                                                            <textarea name="reason" class="form-control" rows="4" placeholder="Please provide a detailed reason for rejection..." required></textarea>
+                                                            <small class="text-muted">This will be sent to the seller</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-danger">Reject Product</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5 class="admin-card-title mb-0">
+                    <i class="bi bi-check-circle text-success me-2"></i>
+                    Recently Approved
+                </h5>
+            </div>
+            <div class="admin-card-body p-0">
+                {% if approvedProducts is empty %}
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p class="text-muted mb-0">No approved products yet</p>
+                    </div>
+                {% else %}
+                    <div class="table-responsive">
+                        <table class="table table-modern mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Seller</th>
+                                    <th>Price</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in approvedProducts %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ product.name }}</strong><br>
+                                            <small class="text-muted">{{ product.category }}</small>
+                                        </td>
+                                        <td>{{ product.seller ? product.seller.email : 'Unknown' }}</td>
+                                        <td><strong class="text-success">${{ product.price }}</strong></td>
+                                        <td><small class="text-muted">{{ product.createdAt|date('M d') }}</small></td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h5 class="admin-card-title mb-0">
+                    <i class="bi bi-x-circle text-danger me-2"></i>
+                    Recently Rejected
+                </h5>
+            </div>
+            <div class="admin-card-body p-0">
+                {% if rejectedProducts is empty %}
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p class="text-muted mb-0">No rejected products</p>
+                    </div>
+                {% else %}
+                    <div class="table-responsive">
+                        <table class="table table-modern mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Seller</th>
+                                    <th>Reason</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in rejectedProducts %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ product.name }}</strong><br>
+                                            <small class="text-muted">{{ product.category }}</small>
+                                        </td>
+                                        <td>{{ product.seller ? product.seller.email : 'Unknown' }}</td>
+                                        <td>
+                                            <small class="text-muted">{{ product.rejectionReason|length > 30 ? product.rejectionReason|slice(0, 30) ~ '...' : product.rejectionReason }}</small>
+                                        </td>
+                                        <td><small class="text-muted">{{ product.createdAt|date('M d') }}</small></td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

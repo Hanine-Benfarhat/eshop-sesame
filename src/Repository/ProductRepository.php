@@ -16,40 +16,52 @@ class ProductRepository extends ServiceEntityRepository
         parent::__construct($registry, Product::class);
     }
 
-public function findByFilters(?string $search, ?string $category, ?string $priceRange)
-{
-    $qb = $this->createQueryBuilder('p');
+    public function findByFilters(?string $search, ?string $category, ?string $priceRange)
+    {
+        $qb = $this->createQueryBuilder('p')
+            ->where('p.status = :status')
+            ->setParameter('status', 'approved');
 
-    if ($search) {
-        $qb->andWhere('p.name LIKE :search OR p.description LIKE :search')
-           ->setParameter('search', '%'.$search.'%');
-    }
-
-    if ($category) {
-        $qb->andWhere('p.category = :category')
-           ->setParameter('category', $category);
-    }
-
-    if ($priceRange) {
-        switch ($priceRange) {
-            case '0-50':
-                $qb->andWhere('p.price BETWEEN 0 AND 50');
-                break;
-            case '50-200':
-                $qb->andWhere('p.price BETWEEN 50 AND 200');
-                break;
-            case '200-500':
-                $qb->andWhere('p.price BETWEEN 200 AND 500');
-                break;
-            case '500+':
-                $qb->andWhere('p.price >= 500');
-                break;
+        if ($search) {
+            $qb->andWhere('p.name LIKE :search OR p.description LIKE :search')
+               ->setParameter('search', '%'.$search.'%');
         }
+
+        if ($category) {
+            $qb->andWhere('p.category = :category')
+               ->setParameter('category', $category);
+        }
+
+        if ($priceRange) {
+            switch ($priceRange) {
+                case '0-50':
+                    $qb->andWhere('p.price BETWEEN 0 AND 50');
+                    break;
+                case '50-200':
+                    $qb->andWhere('p.price BETWEEN 50 AND 200');
+                    break;
+                case '200-500':
+                    $qb->andWhere('p.price BETWEEN 200 AND 500');
+                    break;
+                case '500+':
+                    $qb->andWhere('p.price >= 500');
+                    break;
+            }
+        }
+
+        return $qb->orderBy('p.createdAt', 'DESC')
+                  ->getQuery()
+                  ->getResult();
     }
 
-    return $qb->orderBy('p.createdAt', 'DESC')
-              ->getQuery()
-              ->getResult();
-}
-
+    public function findApprovedProducts(int $limit = 6): array
+    {
+        return $this->createQueryBuilder('p')
+            ->where('p.status = :status')
+            ->setParameter('status', 'approved')
+            ->orderBy('p.createdAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
 }

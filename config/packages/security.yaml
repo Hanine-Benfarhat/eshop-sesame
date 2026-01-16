@@ -5,33 +5,73 @@ security:
 
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
-        users_in_memory: { memory: null }
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: email
 
     firewalls:
         dev:
-            # Ensure dev tools and static assets are always allowed
-            pattern: ^/(_profiler|_wdt|assets|build)/
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
+        
+        api:
+            pattern: ^/api
+            stateless: true
+            provider: app_user_provider
+            
         main:
             lazy: true
-            provider: users_in_memory
-
-            # Activate different ways to authenticate:
-            # https://symfony.com/doc/current/security.html#the-firewall
-
+            provider: app_user_provider
+            form_login:
+                login_path: app_login
+                check_path: app_login
+                default_target_path: app_home
+                enable_csrf: true
+            logout:
+                path: app_logout
+                target: app_home
+            
+            remember_me:
+                secret: '%kernel.secret%'
+                lifetime: 604800 # 1 week in seconds
+                
             # https://symfony.com/doc/current/security/impersonating_user.html
-            # switch_user: true
+            switch_user: true
 
-    # Note: Only the *first* matching rule is applied
+    # Role hierarchy - admins have all user permissions
+    role_hierarchy:
+        ROLE_ADMIN: [ROLE_USER]
+
+    # Easy way to control access for large sections of your site
+    # Note: Only the *first* access control that matches will be used
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        # Public routes - anyone can access
+        - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/register, roles: PUBLIC_ACCESS }
+        - { path: ^/$, roles: PUBLIC_ACCESS }
+        
+        # API routes - require authentication
+        - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/register, roles: PUBLIC_ACCESS }
+        - { path: ^/api, roles: ROLE_USER }
+        
+        # Product management - only authenticated users can create/edit/delete
+        - { path: ^/product/new, roles: ROLE_USER }
+        - { path: ^/product/.*/edit, roles: ROLE_USER }
+        - { path: ^/product$, roles: PUBLIC_ACCESS }
+        - { path: ^/product/.*, roles: PUBLIC_ACCESS }
+        
+        # Everything else requires login
+        # - { path: ^/, roles: ROLE_USER }
 
 when@test:
     security:
         password_hashers:
-            # Password hashers are resource-intensive by design to ensure security.
-            # In tests, it's safe to reduce their cost to improve performance.
+            # By default, password hashers are resource intensive and take time. This is
+            # important to generate secure password hashes. In tests however, secure hashes
+            # are not important, waste resources and increase test times. The following
+            # reduces the work factor to the lowest possible values.
             Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
                 algorithm: auto
                 cost: 4 # Lowest possible value for bcrypt

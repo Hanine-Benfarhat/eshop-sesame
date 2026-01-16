@@ -1,67 +1,222 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ product.name }}{% endblock %}
+{% block title %}{{ product.name }} - Sesame Marketplace{% endblock %}
 
 {% block body %}
-<div class="container mt-5">
+<div class="container-fluid" style="background: white; padding: 2rem 0; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ path('app_home') }}" class="text-decoration-none">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ path('app_product_index') }}" class="text-decoration-none">Products</a></li>
+                <li class="breadcrumb-item active">{{ product.name }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="container mb-5">
     <div class="row g-4">
-        <!-- Product Image -->
-        <div class="col-md-5">
-            {% if product.image %}
-                <div class="card border-0 shadow-sm">
-                    <img src="{{ asset('uploads/products/' ~ product.image) }}" 
-                         alt="{{ product.name }}" 
-                         class="card-img-top rounded-4" 
-                         style="width:100%; object-fit: cover; max-height:400px;">
-                </div>
-            {% else %}
-                <div class="card border-0 shadow-sm bg-light d-flex align-items-center justify-content-center rounded-4" 
-                     style="height:400px;">
-                    <span class="text-muted">No Image</span>
-                </div>
-            {% endif %}
+        <!-- Product Images -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm overflow-hidden">
+                {% if product.image %}
+                    {% if product.image starts with 'http' %}
+                        <img src="{{ product.image }}" class="w-100" alt="{{ product.name }}" style="max-height: 500px; object-fit: cover;">
+                    {% else %}
+                        <img src="{{ asset('uploads/products/' ~ product.image) }}" class="w-100" alt="{{ product.name }}" style="max-height: 500px; object-fit: cover;">
+                    {% endif %}
+                {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center" style="height: 500px;">
+                        <i class="bi bi-image text-muted" style="font-size: 5rem;"></i>
+                    </div>
+                {% endif %}
+            </div>
         </div>
 
         <!-- Product Details -->
-        <div class="col-md-7 d-flex flex-column justify-content-between">
-            <div>
-                <h2 class="fw-bold">{{ product.name }}</h2>
-                <p class="text-muted mb-2">{{ product.category ?: 'Uncategorized' }}</p>
-                <h4 class="text-primary fw-bold mb-3">${{ product.price|number_format(2, '.', ',') }}</h4>
-                <p class="mb-3">{{ product.description }}</p>
-                <p><strong>Available Quantity:</strong> {{ product.quantity }}</p>
-                <p><small class="text-muted">Added on: {{ product.createdAt ? product.createdAt|date('Y-m-d H:i') : '' }}</small></p>
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <!-- Title and Badges -->
+                    <div class="mb-4">
+                        <div class="d-flex gap-2 mb-3">
+                            {% if product.condition %}
+                                <span class="badge bg-secondary">
+                                    {{ product.condition == 'new' ? 'New' : (product.condition == 'like_new' ? 'Like New' : 'Used') }}
+                                </span>
+                            {% endif %}
+                            {% if product.category %}
+                                <span class="badge bg-light text-dark border">{{ product.category }}</span>
+                            {% endif %}
+                            {% if product.status == 'pending' %}
+                                <span class="badge" style="background: #fef3c7; color: #92400e;">Pending Approval</span>
+                            {% elseif product.status == 'approved' %}
+                                <span class="badge" style="background: #d1fae5; color: #065f46;">Approved</span>
+                            {% elseif product.status == 'rejected' %}
+                                <span class="badge" style="background: #fee2e2; color: #991b1b;">Rejected</span>
+                            {% endif %}
+                        </div>
+                        <h1 class="mb-3" style="font-weight: 700; color: #0f172a;">{{ product.name }}</h1>
+                        <h2 class="text-primary mb-0" style="font-weight: 700;">${{ product.price|number_format(2, '.', ',') }}</h2>
+                    </div>
+
+                    <hr>
+
+                    <!-- Product Info Grid -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-box-seam text-muted me-2" style="font-size: 1.2rem;"></i>
+                                <div>
+                                    <small class="text-muted d-block">Quantity</small>
+                                    <strong>{{ product.quantity }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        {% if product.location %}
+                        <div class="col-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-geo-alt text-muted me-2" style="font-size: 1.2rem;"></i>
+                                <div>
+                                    <small class="text-muted d-block">Location</small>
+                                    <strong>{{ product.location }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if product.seller %}
+                        <div class="col-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-person text-muted me-2" style="font-size: 1.2rem;"></i>
+                                <div>
+                                    <small class="text-muted d-block">Seller</small>
+                                    <strong>{{ product.seller.firstName ~ ' ' ~ product.seller.lastName }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="col-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-calendar text-muted me-2" style="font-size: 1.2rem;"></i>
+                                <div>
+                                    <small class="text-muted d-block">Listed</small>
+                                    <strong>{{ product.createdAt|date('M d, Y') }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <h5 class="fw-bold mb-3" style="color: #0f172a;">Description</h5>
+                        <p class="text-muted" style="line-height: 1.8;">{{ product.description }}</p>
+                    </div>
+
+                    {% if product.rejectionReason %}
+                    <div class="alert alert-danger border-0" style="border-left: 4px solid #ef4444 !important;">
+                        <strong><i class="bi bi-exclamation-triangle-fill me-2"></i>Rejection Reason:</strong>
+                        <p class="mb-0 mt-2">{{ product.rejectionReason }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-2 mt-4">
+                        {% if app.user and (product.seller and product.seller.id == app.user.id or is_granted('ROLE_ADMIN')) %}
+                            <a href="{{ path('app_product_edit', {'id': product.id}) }}" class="btn btn-warning flex-fill">
+                                <i class="bi bi-pencil-square me-2"></i>Edit
+                            </a>
+                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        {% elseif app.user %}
+                            <button class="btn btn-primary flex-fill btn-lg">
+                                <i class="bi bi-envelope me-2"></i>Contact Seller
+                            </button>
+                        {% else %}
+                            <a href="{{ path('app_login') }}" class="btn btn-primary flex-fill btn-lg">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Login to Contact Seller
+                            </a>
+                        {% endif %}
+                        <a href="{{ path('app_product_index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-footer bg-light border-top">
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="{{ path('app_product_index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Back to List
+                        </a>
+                        {% if is_granted('ROLE_ADMIN') or (app.user and product.seller and app.user.id == product.seller.id) %}
+                            <a href="{{ path('app_product_edit', {'id': product.id}) }}" class="btn btn-primary">
+                                <i class="bi bi-pencil me-2"></i>Edit
+                            </a>
+                            {{ include('product/_delete_form.html.twig') }}
+                        {% endif %}
+                    </div>
+                </div>
             </div>
+        </div>
+    </div>
 
-            <div class="mt-4">
-                <a href="#" class="btn btn-lg btn-primary w-100">Buy Now</a>
+    <!-- Seller Information Card -->
+    {% if product.seller %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3" style="color: #0f172a;">
+                        <i class="bi bi-person-circle text-primary me-2"></i>Seller Information
+                    </h5>
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                                    <i class="bi bi-person-fill text-muted" style="font-size: 1.8rem;"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold">{{ product.seller.firstName ~ ' ' ~ product.seller.lastName }}</h6>
+                                    <p class="text-muted mb-0 small">{{ product.seller.email }}</p>
+                                    <small class="text-muted">Member since {{ product.seller.createdAt ? product.seller.createdAt|date('Y') : 'N/A' }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                            <button class="btn btn-primary">
+                                <i class="bi bi-envelope me-2"></i>Send Message
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
 
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">Delete Product</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <i class="bi bi-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+                </div>
+                <p class="text-center mb-0">Are you sure you want to delete <strong>{{ product.name }}</strong>?</p>
+                <p class="text-center text-muted small">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                {{ include('product/_delete_form.html.twig') }}
             </div>
         </div>
     </div>
 </div>
-
-<style>
-.card-img-top {
-    border-radius: 1rem 1rem 1rem 1rem;
-}
-
-h2 {
-    font-size: 2rem;
-}
-
-p {
-    line-height: 1.6;
-}
-
-.btn-primary {
-    font-weight: 600;
-    padding: 0.75rem 1rem;
-    font-size: 1.1rem;
-}
-
-.btn-outline-secondary, .btn-outline-warning {
-    font-size: 0.9rem;
-}
-</style>
 {% endblock %}
