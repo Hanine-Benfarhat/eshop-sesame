@@ -30,7 +30,7 @@ final class ProductController extends AbstractController
     }
 
     #[Route('/new', name: 'app_product_new', methods: ['GET', 'POST'])]
-    #[IsGranted('ROLE_USER')]
+    #[IsGranted('ROLE_SELLER')]
     public function new(Request $request, EntityManagerInterface $em): Response
     {
         $product = new Product();
@@ -76,7 +76,7 @@ final class ProductController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_product_edit', methods: ['GET', 'POST'])]
-    #[IsGranted('ROLE_USER')]
+    #[IsGranted('ROLE_SELLER')]
     public function edit(Request $request, Product $product, EntityManagerInterface $entityManager): Response
     {
         // Check if user is the owner or an admin
@@ -121,7 +121,7 @@ final class ProductController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_product_delete', methods: ['POST'])]
-    #[IsGranted('ROLE_USER')]
+    #[IsGranted('ROLE_SELLER')]
     public function delete(Request $request, Product $product, EntityManagerInterface $entityManager): Response
     {
         // Check if user is the owner or an admin
