@@ -26,7 +26,6 @@ security:
             form_login:
                 login_path: app_login
                 check_path: app_login
-                default_target_path: app_home
                 enable_csrf: true
             logout:
                 path: app_logout
@@ -39,9 +38,10 @@ security:
             # https://symfony.com/doc/current/security/impersonating_user.html
             switch_user: true
 
-    # Role hierarchy - admins have all user permissions
+    # Role hierarchy - admins and sellers have user permissions
     role_hierarchy:
-        ROLE_ADMIN: [ROLE_USER]
+        ROLE_SELLER: [ROLE_USER]
+        ROLE_ADMIN: [ROLE_SELLER, ROLE_USER]
 
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
@@ -56,9 +56,17 @@ security:
         - { path: ^/api/register, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: ROLE_USER }
         
-        # Product management - only authenticated users can create/edit/delete
-        - { path: ^/product/new, roles: ROLE_USER }
-        - { path: ^/product/.*/edit, roles: ROLE_USER }
+        # Admin routes - only for admins
+        - { path: ^/admin, roles: ROLE_ADMIN }
+        
+        # Product management - ONLY SELLERS can create/edit/delete products
+        - { path: ^/product/new, roles: ROLE_SELLER }
+        - { path: ^/product/.*/edit, roles: ROLE_SELLER }
+        
+        # User dashboard - only for authenticated users
+        - { path: ^/dashboard, roles: ROLE_USER }
+        
+        # Product viewing - public access
         - { path: ^/product$, roles: PUBLIC_ACCESS }
         - { path: ^/product/.*, roles: PUBLIC_ACCESS }
         

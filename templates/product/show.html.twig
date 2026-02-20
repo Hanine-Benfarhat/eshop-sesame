@@ -126,16 +126,16 @@
                     <div class="d-flex gap-2 mt-4">
                         {% if app.user and (product.seller and product.seller.id == app.user.id or is_granted('ROLE_ADMIN')) %}
                             <a href="{{ path('app_product_edit', {'id': product.id}) }}" class="btn btn-warning flex-fill">
-                                <i class="bi bi-pencil-square me-2"></i>Edit
+                                <i class="bi bi-pencil-square me-2"></i>Edit Product
                             </a>
                             <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
                                 <i class="bi bi-trash"></i>
                             </button>
-                        {% elseif app.user %}
-                            <button class="btn btn-primary flex-fill btn-lg">
+                        {% elseif app.user and product.status == 'approved' %}
+                            <button class="btn btn-primary flex-fill btn-lg" data-bs-toggle="modal" data-bs-target="#contactSellerModal">
                                 <i class="bi bi-envelope me-2"></i>Contact Seller
                             </button>
-                        {% else %}
+                        {% elseif product.status == 'approved' %}
                             <a href="{{ path('app_login') }}" class="btn btn-primary flex-fill btn-lg">
                                 <i class="bi bi-box-arrow-in-right me-2"></i>Login to Contact Seller
                             </a>
@@ -145,49 +145,56 @@
                         </a>
                     </div>
                 </div>
-                <div class="card-footer bg-light border-top">
-                    <div class="d-flex gap-2 justify-content-end">
-                        <a href="{{ path('app_product_index') }}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left me-2"></i>Back to List
-                        </a>
-                        {% if is_granted('ROLE_ADMIN') or (app.user and product.seller and app.user.id == product.seller.id) %}
-                            <a href="{{ path('app_product_edit', {'id': product.id}) }}" class="btn btn-primary">
-                                <i class="bi bi-pencil me-2"></i>Edit
-                            </a>
-                            {{ include('product/_delete_form.html.twig') }}
-                        {% endif %}
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 
     <!-- Seller Information Card -->
-    {% if product.seller %}
+    {% if product.seller and product.status == 'approved' %}
     <div class="row mt-4">
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
-                    <h5 class="fw-bold mb-3" style="color: #0f172a;">
-                        <i class="bi bi-person-circle text-primary me-2"></i>Seller Information
+                    <h5 class="fw-bold mb-4" style="color: #0f172a;">
+                        <i class="bi bi-person-circle text-primary me-2"></i>About the Seller
                     </h5>
                     <div class="row align-items-center">
                         <div class="col-md-8">
                             <div class="d-flex align-items-center">
-                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
-                                    <i class="bi bi-person-fill text-muted" style="font-size: 1.8rem;"></i>
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                     style="width: 70px; height: 70px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-size: 1.5rem; font-weight: bold;">
+                                    {{ product.seller.email|slice(0, 2)|upper }}
                                 </div>
                                 <div>
-                                    <h6 class="mb-1 fw-bold">{{ product.seller.firstName ~ ' ' ~ product.seller.lastName }}</h6>
-                                    <p class="text-muted mb-0 small">{{ product.seller.email }}</p>
-                                    <small class="text-muted">Member since {{ product.seller.createdAt ? product.seller.createdAt|date('Y') : 'N/A' }}</small>
+                                    <h6 class="mb-1 fw-bold" style="color: #0f172a;">{{ product.seller.fullName }}</h6>
+                                    <div class="mb-2">
+                                        {% if product.seller.isSeller %}
+                                            <span class="badge badge-role-seller">
+                                                <i class="bi bi-shop me-1"></i>Verified Seller
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="text-muted mb-1 small">
+                                        <i class="bi bi-calendar-check me-1"></i>
+                                        Member since {{ product.seller.createdAt ? product.seller.createdAt|date('F Y') : 'N/A' }}
+                                    </p>
+                                    <p class="text-muted mb-0 small">
+                                        <i class="bi bi-box-seam me-1"></i>
+                                        {{ product.seller.products|length }} product(s) listed
+                                    </p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                            <button class="btn btn-primary">
-                                <i class="bi bi-envelope me-2"></i>Send Message
-                            </button>
+                            {% if app.user and product.seller.id != app.user.id %}
+                                <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#contactSellerModal">
+                                    <i class="bi bi-envelope me-2"></i>Contact Seller
+                                </button>
+                            {% elseif not app.user %}
+                                <a href="{{ path('app_login') }}" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-box-arrow-in-right me-2"></i>Login to Contact
+                                </a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -196,6 +203,93 @@
     </div>
     {% endif %}
 </div>
+
+<!-- Contact Seller Modal -->
+{% if product.seller and app.user and product.seller.id != app.user.id %}
+<div class="modal fade" id="contactSellerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white;">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-envelope me-2"></i>Contact Seller
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-4">
+                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-size: 2rem; font-weight: bold;">
+                        {{ product.seller.email|slice(0, 2)|upper }}
+                    </div>
+                    <h5 class="fw-bold mb-1">{{ product.seller.fullName }}</h5>
+                    <p class="text-muted small mb-0">Seller of {{ product.name }}</p>
+                </div>
+
+                <div class="alert alert-info border-0" style="background: #eff6ff; border-left: 4px solid #3b82f6 !important;">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Contact Information</strong>
+                </div>
+
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex align-items-center px-0 border-start-0 border-end-0">
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" 
+                             style="width: 45px; height: 45px;">
+                            <i class="bi bi-envelope-fill text-primary" style="font-size: 1.2rem;"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <small class="text-muted d-block">Email Address</small>
+                            <strong>{{ product.seller.email }}</strong>
+                        </div>
+                        <a href="mailto:{{ product.seller.email }}?subject=Inquiry about {{ product.name }}&body=Hi {{ product.seller.firstName }}, I'm interested in your product '{{ product.name }}' listed on Sesame Marketplace." 
+                           class="btn btn-sm btn-outline-primary" target="_blank">
+                            <i class="bi bi-envelope"></i> Email
+                        </a>
+                    </div>
+
+                    {% if product.seller.phone %}
+                    <div class="list-group-item d-flex align-items-center px-0 border-start-0 border-end-0">
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" 
+                             style="width: 45px; height: 45px;">
+                            <i class="bi bi-telephone-fill text-success" style="font-size: 1.2rem;"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <small class="text-muted d-block">Phone Number</small>
+                            <strong>{{ product.seller.phone }}</strong>
+                        </div>
+                        <a href="tel:{{ product.seller.phone }}" class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-telephone"></i> Call
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="list-group-item px-0 border-start-0 border-end-0">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                 style="width: 45px; height: 45px;">
+                                <i class="bi bi-telephone text-muted" style="font-size: 1.2rem;"></i>
+                            </div>
+                            <div>
+                                <small class="text-muted d-block">Phone Number</small>
+                                <span class="text-muted">Not provided</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="alert alert-warning border-0 mt-3 mb-0" style="background: #fefce8; border-left: 4px solid #f59e0b !important;">
+                    <small>
+                        <i class="bi bi-shield-exclamation me-2"></i>
+                        <strong>Safety Tips:</strong> Always meet in public places and verify product condition before payment.
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <!-- Delete Confirmation Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1">

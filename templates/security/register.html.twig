@@ -5,14 +5,14 @@
 {% block body %}
 <div class="container">
     <div class="row justify-content-center" style="min-height: 70vh; align-items: center;">
-        <div class="col-md-6">
+        <div class="col-md-8 col-lg-6">
             <div class="card border-0 shadow-lg">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
                         <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 70px; height: 70px;">
                             <i class="bi bi-person-plus text-primary" style="font-size: 2.5rem;"></i>
                         </div>
-                        <h3 class="fw-bold" style="color: #0f172a;">Create Account</h3>
+                        <h3 class="fw-bold" style="color: #0f172a;">Create Your Account</h3>
                         <p class="text-muted mb-0">Join thousands of users on Sesame Marketplace</p>
                     </div>
 
@@ -29,52 +29,111 @@
 
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">First Name</label>
+                            <label class="form-label fw-bold">{{ form_label(registrationForm.firstName) }}</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0">
                                     <i class="bi bi-person text-muted"></i>
                                 </span>
-                                {{ form_widget(registrationForm.firstName, {'attr': {'class': 'form-control border-start-0 ps-0', 'placeholder': 'John'}}) }}
+                                {{ form_widget(registrationForm.firstName, {'attr': {'class': 'form-control border-start-0 ps-0'}}) }}
                             </div>
                             {{ form_errors(registrationForm.firstName) }}
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Last Name</label>
+                            <label class="form-label fw-bold">{{ form_label(registrationForm.lastName) }}</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0">
                                     <i class="bi bi-person text-muted"></i>
                                 </span>
-                                {{ form_widget(registrationForm.lastName, {'attr': {'class': 'form-control border-start-0 ps-0', 'placeholder': 'Doe'}}) }}
+                                {{ form_widget(registrationForm.lastName, {'attr': {'class': 'form-control border-start-0 ps-0'}}) }}
                             </div>
                             {{ form_errors(registrationForm.lastName) }}
                         </div>
 
                         <div class="col-12">
-                            <label class="form-label fw-bold">Email Address</label>
+                            <label class="form-label fw-bold">{{ form_label(registrationForm.email) }}</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0">
                                     <i class="bi bi-envelope text-muted"></i>
                                 </span>
-                                {{ form_widget(registrationForm.email, {'attr': {'class': 'form-control border-start-0 ps-0', 'placeholder': 'your@email.com'}}) }}
+                                {{ form_widget(registrationForm.email, {'attr': {'class': 'form-control border-start-0 ps-0'}}) }}
                             </div>
                             {{ form_errors(registrationForm.email) }}
                         </div>
 
                         <div class="col-12">
-                            <label class="form-label fw-bold">Password</label>
+                            <label class="form-label fw-bold">{{ form_label(registrationForm.phone) }}</label>
                             <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-telephone text-muted"></i>
+                                </span>
+                                {{ form_widget(registrationForm.phone, {'attr': {'class': 'form-control border-start-0 ps-0'}}) }}
+                            </div>
+                            {{ form_errors(registrationForm.phone) }}
+                            <small class="text-muted">Optional - Used for seller contact</small>
+                        </div>
+
+                        <div class="col-12 mt-4">
+                            <label class="form-label fw-bold d-block mb-3">{{ form_label(registrationForm.accountType) }}</label>
+                            <div class="row g-3">
+                                {% for choice in registrationForm.accountType %}
+                                    <div class="col-12">
+                                        <div class="form-check account-type-card p-3 border rounded">
+                                            {{ form_widget(choice, {'attr': {'class': 'form-check-input'}}) }}
+                                            <label class="form-check-label w-100 cursor-pointer" for="{{ choice.vars.id }}">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="me-3">
+                                                        {% if choice.vars.value == 'buyer' %}
+                                                            <i class="bi bi-cart-check text-primary" style="font-size: 1.8rem;"></i>
+                                                        {% elseif choice.vars.value == 'seller' %}
+                                                            <i class="bi bi-shop text-success" style="font-size: 1.8rem;"></i>
+                                                        {% else %}
+                                                            <i class="bi bi-arrow-left-right text-info" style="font-size: 1.8rem;"></i>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div>
+                                                        <strong class="d-block">{{ choice.vars.label }}</strong>
+                                                        <small class="text-muted">
+                                                            {% if choice.vars.value == 'buyer' %}
+                                                                Browse and purchase products from sellers
+                                                            {% elseif choice.vars.value == 'seller' %}
+                                                                List and sell your products to buyers
+                                                            {% else %}
+                                                                Full access to buy and sell products
+                                                            {% endif %}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {{ form_errors(registrationForm.accountType) }}
+                        </div>
+
+                        <div class="col-12 mt-3">
+                            <label class="form-label fw-bold">{{ form_label(registrationForm.password.first) }}</label>
+                            <div class="input-group mb-3">
                                 <span class="input-group-text bg-light border-end-0">
                                     <i class="bi bi-lock text-muted"></i>
                                 </span>
-                                {{ form_widget(registrationForm.password, {'attr': {'class': 'form-control border-start-0 ps-0', 'placeholder': 'Create a strong password'}}) }}
+                                {{ form_widget(registrationForm.password.first, {'attr': {'class': 'form-control border-start-0 ps-0'}}) }}
+                            </div>
+
+                            <label class="form-label fw-bold">{{ form_label(registrationForm.password.second) }}</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-lock-fill text-muted"></i>
+                                </span>
+                                {{ form_widget(registrationForm.password.second, {'attr': {'class': 'form-control border-start-0 ps-0'}}) }}
                             </div>
                             {{ form_errors(registrationForm.password) }}
                             <small class="text-muted">Must be at least 6 characters long</small>
                         </div>
                     </div>
 
-                    <button class="btn btn-primary w-100 py-2 fw-bold mt-4 mb-3" type="submit">
+                    <button class="btn btn-primary w-100 py-3 fw-bold mt-4 mb-3" type="submit" style="font-size: 1.1rem;">
                         <i class="bi bi-check-circle me-2"></i>Create My Account
                     </button>
 
@@ -83,13 +142,14 @@
                     <div class="text-center">
                         <p class="text-muted small mb-0">
                             Already have an account? 
-                            <a href="{{ path('app_login') }}" class="text-decoration-none fw-bold">Sign in here</a>
+                            <a href="{{ path('app_login') }}" class="text-decoration-none fw-bold" style="color: var(--primary-color);">Sign in here</a>
                         </p>
                     </div>
                 </div>
                 
                 <div class="card-footer bg-light border-top-0 text-center py-3">
                     <small class="text-muted">
+                        <i class="bi bi-shield-check me-1"></i>
                         By creating an account, you agree to our Terms of Service
                     </small>
                 </div>
@@ -97,4 +157,31 @@
         </div>
     </div>
 </div>
+
+<style>
+.account-type-card {
+    cursor: pointer;
+    transition: all 0.3s;
+    background-color: white;
+}
+
+.account-type-card:hover {
+    background-color: #f8fafc !important;
+    border-color: var(--primary-color) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+}
+
+.account-type-card input[type="radio"]:checked + label,
+.account-type-card:has(input[type="radio"]:checked) {
+    background-color: #eff6ff !important;
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+</style>
 {% endblock %}

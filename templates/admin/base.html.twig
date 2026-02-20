@@ -9,9 +9,9 @@
             <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
             <style>
                 :root {
-                    --admin-primary: #0f172a;
+                    --admin-primary: #0ea5e9;
                     --admin-secondary: #1e293b;
-                    --admin-accent: #059669;
+                    --admin-accent: #10b981;
                     --admin-success: #10b981;
                     --admin-warning: #f59e0b;
                     --admin-danger: #ef4444;
@@ -36,7 +36,7 @@
                     padding: 0;
                     z-index: 1000;
                     overflow-y: auto;
-                    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+                    box-shadow: 4px 0 12px rgba(0,0,0,0.15);
                 }
                 
                 .admin-sidebar::-webkit-scrollbar {
@@ -337,27 +337,33 @@
                     </a>
                 </div>
                 <div class="admin-nav-item">
-                    <a href="{{ path('app_product_index') }}" class="admin-nav-link">
+                    <a href="{{ path('admin_products') }}" class="admin-nav-link {% if app.request.get('_route') == 'admin_products' %}active{% endif %}">
                         <i class="bi bi-box-seam"></i>
-                        All Products
+                        Products
                     </a>
                 </div>
                 <div class="admin-nav-item">
-                    <a href="{{ path('app_product_new') }}" class="admin-nav-link">
-                        <i class="bi bi-plus-circle"></i>
-                        Add Product
-                    </a>
-                </div>
-                <div class="admin-nav-item">
-                    <a href="#" class="admin-nav-link">
+                    <a href="{{ path('admin_users') }}" class="admin-nav-link {% if app.request.get('_route') == 'admin_users' %}active{% endif %}">
                         <i class="bi bi-people"></i>
                         Users
                     </a>
                 </div>
                 <div class="admin-nav-item">
-                    <a href="#" class="admin-nav-link">
+                    <a href="{{ path('admin_analytics') }}" class="admin-nav-link {% if app.request.get('_route') == 'admin_analytics' %}active{% endif %}">
+                        <i class="bi bi-graph-up"></i>
+                        Analytics
+                    </a>
+                </div>
+                <div class="admin-nav-item">
+                    <a href="{{ path('admin_settings') }}" class="admin-nav-link {% if app.request.get('_route') == 'admin_settings' %}active{% endif %}">
                         <i class="bi bi-gear"></i>
                         Settings
+                    </a>
+                </div>
+                <div class="admin-nav-item">
+                    <a href="{{ path('app_product_new') }}" class="admin-nav-link {% if app.request.get('_route') == 'app_product_new' %}active{% endif %}">
+                        <i class="bi bi-plus-circle"></i>
+                        Add Product
                     </a>
                 </div>
             </nav>
