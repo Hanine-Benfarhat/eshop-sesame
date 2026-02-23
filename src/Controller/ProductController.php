@@ -11,16 +11,23 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Psr\Log\LoggerInterface;
 
 #[Route('/product')]
 final class ProductController extends AbstractController
 {
     #[Route(name: 'app_product_index', methods: ['GET'])]
-    public function index(Request $request, ProductRepository $productRepository): Response
+    public function index(Request $request, ProductRepository $productRepository, LoggerInterface $logger): Response
     {
         $search = $request->query->get('search');
         $category = $request->query->get('category');
         $priceRange = $request->query->get('price_range');
+
+        $logger->info('Product index accessed', [
+            'search' => $search,
+            'category' => $category,
+            'price_range' => $priceRange,
+        ]);
 
         $products = $productRepository->findByFilters($search, $category, $priceRange);
 
