@@ -16,7 +16,7 @@ class ProductRepository extends ServiceEntityRepository
         parent::__construct($registry, Product::class);
     }
 
-    public function findByFilters(?string $search, ?string $category, ?string $priceRange)
+    public function findByFilters(?string $search, ?string $category, ?string $priceRange, ?string $sort = null)
     {
         $qb = $this->createQueryBuilder('p')
             ->where('p.status = :status')
@@ -49,8 +49,26 @@ class ProductRepository extends ServiceEntityRepository
             }
         }
 
-        return $qb->orderBy('p.createdAt', 'DESC')
-                  ->getQuery()
+        // apply sort
+        if ($sort) {
+            switch ($sort) {
+                case 'price_asc':
+                    $qb->orderBy('p.price', 'ASC');
+                    break;
+                case 'price_desc':
+                    $qb->orderBy('p.price', 'DESC');
+                    break;
+                case 'oldest':
+                    $qb->orderBy('p.createdAt', 'ASC');
+                    break;
+                default: // newest or unrecognized
+                    $qb->orderBy('p.createdAt', 'DESC');
+            }
+        } else {
+            $qb->orderBy('p.createdAt', 'DESC');
+        }
+
+        return $qb->getQuery()
                   ->getResult();
     }
 

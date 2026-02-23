@@ -22,17 +22,20 @@ final class ProductController extends AbstractController
         $search = $request->query->get('search');
         $category = $request->query->get('category');
         $priceRange = $request->query->get('price_range');
+        $sort = $request->query->get('sort');
 
         $logger->info('Product index accessed', [
             'search' => $search,
             'category' => $category,
             'price_range' => $priceRange,
+            'sort' => $sort,
         ]);
 
-        $products = $productRepository->findByFilters($search, $category, $priceRange);
+        $products = $productRepository->findByFilters($search, $category, $priceRange, $sort);
 
         return $this->render('product/index.html.twig', [
             'products' => $products,
+            'currentSort' => $sort,
         ]);
     }
 

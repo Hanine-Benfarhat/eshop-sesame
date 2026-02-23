@@ -13,5 +13,10 @@ class ProductControllerTest extends WebTestCase
 
         $this->assertResponseIsSuccessful();
         $this->assertSelectorExists('h1');
+
+        // try with sort parameter to ensure query works
+        $client->request('GET', '/product?sort=price_asc');
+        $this->assertResponseIsSuccessful();
+        $this->assertSelectorExists('h1');
     }
 }
